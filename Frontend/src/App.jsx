@@ -1,5 +1,6 @@
 import React from "react";
 import { BrowserRouter as Router, Route, Routes, useParams, Navigate } from "react-router-dom";
+import { Analytics } from "@vercel/analytics/react";
 
 import Board from "./components/Board/index.jsx";
 import Toolbar from "./components/Toolbar/index.jsx";
@@ -81,6 +82,7 @@ function App() {
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
+        <Analytics />
       </BoardProvider>
     </Router>
   );
