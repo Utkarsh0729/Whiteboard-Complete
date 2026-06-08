@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import styles from "./index.module.css";
 import boardContext from "../../store/board-context";
@@ -15,6 +15,63 @@ const Login = () => {
 
   const API_BASE_URL =
     import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+
+  const handleCredentialResponse = async (response) => {
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const apiResponse = await fetch(`${API_BASE_URL}/users/google-login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ credential: response.credential }),
+      });
+
+      const data = await apiResponse.json();
+
+      if (!apiResponse.ok || !data.token) {
+        throw new Error(data.error || "Google Login failed");
+      }
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("userEmail", data.email);
+
+      setUserLoginStatus(true);
+      reconnectSocket();
+      navigate("/dashboard");
+    } catch (err) {
+      setError(err.message || "Google auth error");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const initializeGoogleSignIn = () => {
+      if (window.google) {
+        window.google.accounts.id.initialize({
+          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+          callback: handleCredentialResponse,
+        });
+        window.google.accounts.id.renderButton(
+          document.getElementById("googleSignInDiv"),
+          { theme: "outline", size: "large", width: "100%" }
+        );
+      }
+    };
+
+    if (window.google) {
+      initializeGoogleSignIn();
+    } else {
+      const interval = setInterval(() => {
+        if (window.google) {
+          initializeGoogleSignIn();
+          clearInterval(interval);
+        }
+      }, 500);
+      return () => clearInterval(interval);
+    }
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -89,6 +146,11 @@ const Login = () => {
             {isLoading ? "Logging in..." : "Login"}
           </button>
         </form>
+
+        <div className={styles.divider}>or</div>
+        <div className={styles.googleLoginContainer}>
+          <div id="googleSignInDiv"></div>
+        </div>
 
         <div className={styles.footer}>
           <p>

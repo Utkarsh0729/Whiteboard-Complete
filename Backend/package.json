@@ -9,6 +9,7 @@
     "cors": "*",
     "dotenv": "*",
     "express": "*",
+    "google-auth-library": "^10.7.0",
     "jsonwebtoken": "*",
     "mongoose": "*",
     "socket.io": "*"
